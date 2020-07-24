@@ -1,21 +1,9 @@
-
 from datetime import datetime, timedelta
-
-from weibo_search.utils.region import region_dict
+from web.region_info.region import region_dict
 
 
 def get_all_province():
     return list(region_dict.keys())
-
-
-def find_last_level_region(region):
-    if region in region_dict:
-        return region
-
-    for prov in region_dict:
-        if region in region_dict[prov]['city']:
-            return prov
-    return None
 
 
 def convert_weibo_type(weibo_type):

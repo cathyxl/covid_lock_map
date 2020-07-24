@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Crawl from the mobile version Weibo website"""
 import scrapy
 import datetime
 import re

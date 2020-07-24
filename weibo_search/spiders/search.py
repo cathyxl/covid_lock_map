@@ -1,3 +1,4 @@
+"""Crawl Weibo from the normally used weibo.com"""
 import re
 import scrapy
 import weibo_search.utils.util as util
@@ -60,6 +61,11 @@ class SearchSpider(scrapy.Spider):
                                          })
 
     def parse(self, response):
+        """
+        parse weibo web page,
+        :param response:
+        :return:
+        """
         print('start parse')
         base_url = response.meta.get('base_url')
         keyword = response.meta.get('keyword')
@@ -70,8 +76,9 @@ class SearchSpider(scrapy.Spider):
         page_count = len(response.xpath('//ul[@class="s-scroll"]/li'))
         print(is_empty, page_count)
         if is_empty:
-            print('当前页面搜索结果为空')
+            print('No Search Results!')
         elif page_count < 50:
+            """if page count less than 50, just parse"""
             # 解析当前页面
             print('<50')
             for weibo in self.parse_weibo(response):
@@ -85,6 +92,7 @@ class SearchSpider(scrapy.Spider):
                                      callback=self.parse_page,
                                      meta={'keyword': keyword})
         else:
+            " If over 50 page for one search, search day by day"
             print('by day')
             start_date = datetime.strptime(self.start_date, '%Y-%m-%d')
             end_date = datetime.strptime(self.end_date, '%Y-%m-%d')
@@ -96,7 +104,7 @@ class SearchSpider(scrapy.Spider):
                 url += self.contain_type
                 url += '&timescope=custom:{}:{}&page=1'.format(
                     start_str, end_str)
-                # 获取一天的搜索结果
+                "Get one day results "
                 yield scrapy.Request(url=url,
                                      callback=self.parse_by_day,
                                      meta={
@@ -107,7 +115,7 @@ class SearchSpider(scrapy.Spider):
                                      })
 
     def parse_by_day(self, response):
-        """以天为单位筛选"""
+        """Search by Day"""
         base_url = response.meta.get('base_url')
         keyword = response.meta.get('keyword')
         province = response.meta.get('province')
@@ -116,7 +124,7 @@ class SearchSpider(scrapy.Spider):
         date = response.meta.get('date')
         page_count = len(response.xpath('//ul[@class="s-scroll"]/li'))
         if is_empty:
-            print('当前页面搜索结果为空')
+            print('No Search Results!')
         elif page_count < 50:
             # 解析当前页面
             for weibo in self.parse_weibo(response):
@@ -143,7 +151,7 @@ class SearchSpider(scrapy.Spider):
                 url += self.contain_type
                 url += '&timescope=custom:{}:{}&page=1'.format(
                     start_str, end_str)
-                # 获取一小时的搜索结果
+                "Search one hour results"
                 yield scrapy.Request(url=url,
                                      callback=self.parse_by_hour_province
                                      if province else self.parse_by_hour,
@@ -156,7 +164,7 @@ class SearchSpider(scrapy.Spider):
                                      })
 
     def parse_by_hour(self, response):
-        """以小时为单位筛选"""
+        """Search by hour"""
         keyword = response.meta.get('keyword')
         is_empty = response.xpath(
             '//div[@class="card card-no-result s-pt20b40"]')
@@ -164,7 +172,7 @@ class SearchSpider(scrapy.Spider):
         end_time = response.meta.get('end_time')
         page_count = len(response.xpath('//ul[@class="s-scroll"]/li'))
         if is_empty:
-            print('当前页面搜索结果为空')
+            print('No Search Results!')
         elif page_count < 50:
             # 解析当前页面
             for weibo in self.parse_weibo(response):
@@ -186,7 +194,7 @@ class SearchSpider(scrapy.Spider):
                 url += self.contain_type
                 url += '&timescope=custom:{}:{}&page=1'.format(
                     start_time, end_time)
-                # 获取一小时一个省的搜索结果
+                "Search by one hour and one province"
                 yield scrapy.Request(url=url,
                                      callback=self.parse_by_hour_province,
                                      meta={
@@ -197,7 +205,7 @@ class SearchSpider(scrapy.Spider):
                                      })
 
     def parse_by_hour_province(self, response):
-        """以小时和直辖市/省为单位筛选"""
+        """Search by hour, city/province"""
         keyword = response.meta.get('keyword')
         is_empty = response.xpath(
             '//div[@class="card card-no-result s-pt20b40"]')
@@ -206,7 +214,7 @@ class SearchSpider(scrapy.Spider):
         province = response.meta.get('province')
         page_count = len(response.xpath('//ul[@class="s-scroll"]/li'))
         if is_empty:
-            print('当前页面搜索结果为空')
+            print('No Search Results!')
         elif page_count < 50:
             # 解析当前页面
             for weibo in self.parse_weibo(response):
@@ -239,15 +247,14 @@ class SearchSpider(scrapy.Spider):
                                      })
 
     def parse_page(self, response):
-        """解析一页搜索结果的信息"""
+        """Parse information for one page search"""
         keyword = response.meta.get('keyword')
         is_empty = response.xpath(
             '//div[@class="card card-no-result s-pt20b40"]')
         if is_empty:
-            print('当前页面搜索结果为空')
+            print('No Search Results!')
         else:
             for weibo in self.parse_weibo(response):
-                # self.check_environment()
                 yield weibo
             next_url = response.xpath(
                 '//a[@class="next"]/@href').extract_first()
@@ -258,7 +265,7 @@ class SearchSpider(scrapy.Spider):
                                      meta={'keyword': keyword})
 
     def get_article_url(self, selector):
-        """获取微博头条文章url"""
+        """Get passage link"""
         article_url = ''
         text = selector.xpath('string(.)').extract_first().replace(
             '\u200b', '').replace('\ue627', '').replace('\n',
@@ -275,7 +282,7 @@ class SearchSpider(scrapy.Spider):
         return article_url
 
     def get_location(self, selector):
-        """获取微博发布位置"""
+        """Get the publication location"""
         a_list = selector.xpath('.//a')
         location = ''
         for a in a_list:
@@ -286,7 +293,7 @@ class SearchSpider(scrapy.Spider):
         return location
 
     def get_at_users(self, selector):
-        """获取微博中@的用户昵称"""
+        """Get the @ Name in weibo"""
         a_list = selector.xpath('.//a')
         at_users = ''
         at_list = []
@@ -303,7 +310,7 @@ class SearchSpider(scrapy.Spider):
         return at_users
 
     def get_topics(self, selector):
-        """获取参与的微博话题"""
+        """Get topics for one weibo"""
         a_list = selector.xpath('.//a')
         topics = ''
         topic_list = []
@@ -317,7 +324,7 @@ class SearchSpider(scrapy.Spider):
         return topics
 
     def parse_weibo(self, response):
-        """解析网页中的微博信息"""
+        """Parse one mblog"""
         keyword = response.meta.get('keyword')
         for sel in response.xpath("//div[@class='card-wrap']"):
             info = sel.xpath(
@@ -338,10 +345,9 @@ class SearchSpider(scrapy.Spider):
                 retweet_sel = sel.xpath('.//div[@class="card-comment"]')
                 retweet_txt_sel = ''
                 if retweet_sel and retweet_sel[0].xpath('.//p[@class="txt"]'):
-                    retweet_txt_sel = retweet_sel[0].xpath(
-                        './/p[@class="txt"]')[0]
-                content_full = sel.xpath(
-                    './/p[@node-type="feed_list_content_full"]')
+                    retweet_txt_sel = retweet_sel[0].xpath('.//p[@class="txt"]')[0]
+                content_full = sel.xpath('.//p[@node-type="feed_list_content_full"]')
+                "deal with origin weibo and retweets"
                 is_long_weibo = False
                 is_long_retweet = False
                 if content_full:
@@ -353,75 +359,56 @@ class SearchSpider(scrapy.Spider):
                         retweet_txt_sel = content_full[1]
                         is_long_weibo = True
                         is_long_retweet = True
-                    elif retweet_sel[0].xpath(
-                            './/p[@node-type="feed_list_content_full"]'):
-                        retweet_txt_sel = retweet_sel[0].xpath(
-                            './/p[@node-type="feed_list_content_full"]')[0]
+                    elif retweet_sel[0].xpath('.//p[@node-type="feed_list_content_full"]'):
+                        retweet_txt_sel = retweet_sel[0].xpath('.//p[@node-type="feed_list_content_full"]')[0]
                         is_long_retweet = True
                     else:
                         txt_sel = content_full[0]
                         is_long_weibo = True
-                weibo['text'] = txt_sel.xpath(
-                    'string(.)').extract_first().replace('\u200b', '').replace(
+                weibo['text'] = txt_sel.xpath('string(.)').extract_first().replace('\u200b', '').replace(
                         '\ue627', '')
                 weibo['article_url'] = self.get_article_url(txt_sel)
                 weibo['location'] = self.get_location(txt_sel)
                 if weibo['location']:
-                    weibo['text'] = weibo['text'].replace(
-                        '2' + weibo['location'], '')
+                    weibo['text'] = weibo['text'].replace('2' + weibo['location'], '')
                 weibo['text'] = weibo['text'][2:].replace(' ', '')
                 if is_long_weibo:
                     weibo['text'] = weibo['text'][:-6]
                 weibo['at_users'] = self.get_at_users(txt_sel)
                 weibo['topics'] = self.get_topics(txt_sel)
-                reposts_count = sel.xpath(
-                    './/a[@action-type="feed_list_forward"]/text()'
-                ).extract_first()
+                reposts_count = sel.xpath('.//a[@action-type="feed_list_forward"]/text()').extract_first()
                 try:
                     reposts_count = re.findall(r'\d+.*', reposts_count)
                 except TypeError:
-                    print('cookie无效或已过期，请按照'
-                          'https://github.com/dataabc/weibo-search#如何获取cookie'
-                          ' 获取cookie')
+                    print('cookie无效或已过期')
                     raise CloseSpider()
-                weibo['reposts_count'] = reposts_count[
-                    0] if reposts_count else '0'
-                comments_count = sel.xpath(
-                    './/a[@action-type="feed_list_comment"]/text()'
-                ).extract_first()
+                weibo['reposts_count'] = reposts_count[0] if reposts_count else '0'
+                comments_count = sel.xpath('.//a[@action-type="feed_list_comment"]/text()').extract_first()
                 comments_count = re.findall(r'\d+.*', comments_count)
                 weibo['comments_count'] = comments_count[
                     0] if comments_count else '0'
-                attitudes_count = sel.xpath(
-                    '(.//a[@action-type="feed_list_like"])[last()]/em/text()'
-                ).extract_first()
-                weibo['attitudes_count'] = (attitudes_count
-                                            if attitudes_count else '0')
-                created_at = sel.xpath(
-                    '(.//p[@class="from"])[last()]/a[1]/text()').extract_first(
+                attitudes_count = sel.xpath('(.//a[@action-type="feed_list_like"])[last()]/em/text()').extract_first()
+                weibo['attitudes_count'] = (attitudes_count if attitudes_count else '0')
+                created_at = sel.xpath('(.//p[@class="from"])[last()]/a[1]/text()').extract_first(
                     ).replace(' ', '').replace('\n', '').split('前')[0]
                 weibo['created_at'] = util.standardize_date(created_at)
-                source = sel.xpath('(.//p[@class="from"])[last()]/a[2]/text()'
-                                   ).extract_first()
+                source = sel.xpath('(.//p[@class="from"])[last()]/a[2]/text()').extract_first()
                 weibo['source'] = source if source else ''
                 pics = ''
-                is_exist_pic = sel.xpath(
-                    './/div[@class="media media-piclist"]')
+                is_exist_pic = sel.xpath('.//div[@class="media media-piclist"]')
                 if is_exist_pic:
                     pics = is_exist_pic[0].xpath('ul[1]/li/img/@src').extract()
                     pics = [pic[2:] for pic in pics]
-                    pics = [
-                        re.sub(r'/.*?/', '/large/', pic, 1) for pic in pics
-                    ]
+                    pics = [re.sub(r'/.*?/', '/large/', pic, 1) for pic in pics]
                     pics = ['http://' + pic for pic in pics]
                 video_url = ''
-                is_exist_video = sel.xpath(
-                    './/div[@class="thumbnail"]/a/@action-data')
+                is_exist_video = sel.xpath('.//div[@class="thumbnail"]/a/@action-data')
                 if is_exist_video:
                     video_url = is_exist_video.extract_first()
                     video_url = unquote(
                         str(video_url)).split('video_src=//')[-1]
                     video_url = 'http://' + video_url
+                ""
                 if not retweet_sel:
                     weibo['pics'] = pics
                     weibo['video_url'] = video_url
@@ -429,65 +416,45 @@ class SearchSpider(scrapy.Spider):
                     weibo['pics'] = ''
                     weibo['video_url'] = ''
                 weibo['retweet_id'] = ''
-                if retweet_sel and retweet_sel[0].xpath(
-                        './/div[@node-type="feed_list_forwardContent"]/a[1]'):
+                if retweet_sel and retweet_sel[0].xpath('.//div[@node-type="feed_list_forwardContent"]/a[1]'):
                     retweet = WeiboSearchItem()
-                    retweet['id'] = retweet_sel[0].xpath(
-                        './/a[@action-type="feed_list_like"]/@action-data'
-                    ).extract_first()[4:]
-                    retweet['bid'] = retweet_sel[0].xpath(
-                        './/p[@class="from"]/a/@href').extract_first().split(
-                            '/')[-1].split('?')[0]
-                    info = retweet_sel[0].xpath(
-                        './/div[@node-type="feed_list_forwardContent"]/a[1]'
-                    )[0]
-                    retweet['user_id'] = info.xpath(
-                        '@href').extract_first().split('/')[-1]
-                    retweet['screen_name'] = info.xpath(
-                        '@nick-name').extract_first()
-                    retweet['text'] = retweet_txt_sel.xpath(
-                        'string(.)').extract_first().replace('\u200b',
-                                                             '').replace(
-                                                                 '\ue627', '')
+                    retweet['id'] = retweet_sel[0].xpath('.//a[@action-type="feed_list_like"]/@action-data'
+                                                         ).extract_first()[4:]
+                    retweet['bid'] = retweet_sel[0].xpath('.//p[@class="from"]/a/@href').extract_first().split(
+                        '/')[-1].split('?')[0]
+                    info = retweet_sel[0].xpath('.//div[@node-type="feed_list_forwardContent"]/a[1]')[0]
+                    retweet['user_id'] = info.xpath('@href').extract_first().split('/')[-1]
+                    retweet['screen_name'] = info.xpath('@nick-name').extract_first()
+                    retweet['text'] = retweet_txt_sel.xpath('string(.)').extract_first().replace(
+                        '\u200b', '').replace('\ue627', '')
                     retweet['article_url'] = self.get_article_url(
                         retweet_txt_sel)
                     retweet['location'] = self.get_location(retweet_txt_sel)
                     if retweet['location']:
-                        retweet['text'] = retweet['text'].replace(
-                            '2' + retweet['location'], '')
+                        retweet['text'] = retweet['text'].replace('2' + retweet['location'], '')
                     retweet['text'] = retweet['text'][2:].replace(' ', '')
                     if is_long_retweet:
                         retweet['text'] = retweet['text'][:-6]
                     retweet['at_users'] = self.get_at_users(retweet_txt_sel)
                     retweet['topics'] = self.get_topics(retweet_txt_sel)
-                    reposts_count = retweet_sel[0].xpath(
-                        './/ul[@class="act s-fr"]/li/a[1]/text()'
-                    ).extract_first()
+                    reposts_count = retweet_sel[0].xpath('.//ul[@class="act s-fr"]/li/a[1]/text()').extract_first()
                     reposts_count = re.findall(r'\d+.*', reposts_count)
-                    retweet['reposts_count'] = reposts_count[
-                        0] if reposts_count else '0'
-                    comments_count = retweet_sel[0].xpath(
-                        './/ul[@class="act s-fr"]/li[2]/a[1]/text()'
-                    ).extract_first()
+                    retweet['reposts_count'] = reposts_count[0] if reposts_count else '0'
+                    comments_count = retweet_sel[0].xpath('.//ul[@class="act s-fr"]/li[2]/a[1]/text()').extract_first()
                     comments_count = re.findall(r'\d+.*', comments_count)
-                    retweet['comments_count'] = comments_count[
-                        0] if comments_count else '0'
-                    attitudes_count = retweet_sel[0].xpath(
-                        './/a[@action-type="feed_list_like"]/em/text()'
-                    ).extract_first()
-                    retweet['attitudes_count'] = (attitudes_count
-                                                  if attitudes_count else '0')
-                    created_at = retweet_sel[0].xpath(
-                        './/p[@class="from"]/a[1]/text()').extract_first(
+                    retweet['comments_count'] = comments_count[0] if comments_count else '0'
+                    attitudes_count = retweet_sel[0].xpath('.//a[@action-type="feed_list_like"]/em/text()').extract_first()
+                    retweet['attitudes_count'] = (attitudes_count if attitudes_count else '0')
+                    created_at = retweet_sel[0].xpath('.//p[@class="from"]/a[1]/text()').extract_first(
                         ).replace(' ', '').replace('\n', '').split('前')[0]
                     retweet['created_at'] = util.standardize_date(created_at)
-                    source = retweet_sel[0].xpath(
-                        './/p[@class="from"]/a[2]/text()').extract_first()
+                    source = retweet_sel[0].xpath('.//p[@class="from"]/a[2]/text()').extract_first()
                     retweet['source'] = source if source else ''
                     retweet['pics'] = pics
                     retweet['video_url'] = video_url
                     retweet['retweet_id'] = ''
                     yield {'weibo': retweet, 'keyword': keyword}
                     weibo['retweet_id'] = retweet['id']
-                print(weibo)
+                print(weibo['created_at'])
                 yield {'weibo': weibo, 'keyword': keyword}
+

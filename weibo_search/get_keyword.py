@@ -1,3 +1,4 @@
+"""Trying to get keywords by LDA, but the results is not applicable"""
 import os
 import csv
 import jieba

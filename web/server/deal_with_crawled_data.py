@@ -1,8 +1,8 @@
 import csv
 import os
 import pickle
-import weibo_search.utils.util as util
 import json
+from region_info.region import find_last_level_region
 
 
 def predict_lock_from_text(text):
@@ -83,7 +83,7 @@ def transfer_data_lock(crawled_data_files):
                 for r in regions:
                     # pub_prov = None
                     if blog['微博正文'].find(r) > 0:
-                        p = util.find_last_level_region(r)
+                        p = find_last_level_region(r)
                     else:
                         continue
                     if p:
@@ -162,7 +162,7 @@ def transfer_data_lock(crawled_data_files):
 
 
 if __name__ == '__main__':
-    data_path = '../../weibo_search/output_files/original_csv'
+    data_path = '../../data/crawled_files/original_csv'
     keywords = os.listdir(data_path)
     print(keywords)
     # keywords = ['全面复工']

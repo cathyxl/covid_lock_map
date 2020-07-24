@@ -13,8 +13,11 @@ from itemadapter import ItemAdapter
 
 
 class CsvPipeline(object):
+    """Save weibo item into csv files"""
     def process_item(self, item, spider):
-        base_dir = 'output_files' + os.sep + item['keyword']
+        settings = get_project_settings()
+        crawl_id = settings.get('CRAWL_ID')
+        base_dir = '../data/crawled_files/' + crawl_id + os.sep + item['keyword']
         if not os.path.isdir(base_dir):
             os.makedirs(base_dir)
         file_path = base_dir + os.sep + item['keyword'] + '.csv'
@@ -37,36 +40,16 @@ class CsvPipeline(object):
         return item
 
 
-class WeiboSearchPipeline:
-    def process_item(self, item, spider):
-        return item
-
-
 class DuplicatesPipeline(object):
-    # def __init__(self):
-    #
-    #     # # self.ids_seen = set()
-
+    """Drop duplicate weibo"""
     def process_item(self, item, spider):
-        # settings = get_project_settings()
-        # keyword_list = settings.get('KEYWORD_LIST')
-
-        # for kw in keyword_list:
-        #     for file in os.listdir('output_files/%s' % kw):
-        #         if file.find(item['weibo']['id']):
-        #             raise DropItem("Filter Repetitive Weibo: %s" % item)
-        #         break
-        # else:
-        #     return item
-        id_file = 'output_files/weibo_ids.txt'
-        # if not os.path.exists(id_file):
+        id_file = '../data/crawled_files/weibo_ids.txt'
 
         with open(id_file) as f:
             ids_seen = f.read().splitlines()
         if item['weibo']['id'] in ids_seen:
             raise DropItem("Filter Repetitive Weibo: %s" % item)
         else:
-            # self.ids_seen.append(item['weibo']['id'])
             with open(id_file, 'a') as f:
                 f.write('%s\n' % item['weibo']['id'])
                 # self.ids_seen = f.read().splitlines()

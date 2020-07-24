@@ -39,7 +39,6 @@ class WeiboLogin:
 
     def run(self):
         """
-
         :return:
         """
         self.open()

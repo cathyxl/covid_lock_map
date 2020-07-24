@@ -3,14 +3,14 @@ var chart = echarts.init(document.getElementById('ncov-map'), 'white', {renderer
 var loader = document.getElementById('loading');
 var time_index = 0;
 var iframe = document.getElementById('pmap-chart');
-/*iframe.onreadystatechange=function() {
+iframe.onreadystatechange=function() {
 		//此事件在内容没有被载入时候也会被触发，所以我们要判断状态
 		//有时候会比较怪异 readyState状态会跳过 complete 所以我们loaded状态也要判断
         loader.css.dispaly = "";
 		if (iframe.readyState === "complete" || iframe.readyState === "loaded"){
 		    loader.css.dispaly = "none"
         }
-	};*/
+	};
 
 
 $(

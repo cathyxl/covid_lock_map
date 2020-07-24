@@ -1,3 +1,4 @@
+"""generate word cloud for texts"""
 import json
 
 import jieba.analyse

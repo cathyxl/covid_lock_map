@@ -1,6 +1,8 @@
-from flask import Flask, render_template, jsonify, request
+"""Interface for client requests"""
+import os
+from flask import Flask, render_template, request, jsonify
 from datetime import timedelta
-from web.logistic import predict_china_lock_from_text, lock_map, predcit_province_lock_from_text, prov_lock_map, get_china_lock_news,get_province_lock_map,get_china_lock_map
+from logistic import predict_china_lock_from_text, lock_map, predcit_province_lock_from_text, prov_lock_map, get_china_lock_news,get_province_lock_map,get_china_lock_map
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
 
@@ -56,25 +58,13 @@ def get_pmap():
 def get_china_news():
     data = request_parse(request)
     time_index = int(data['time_index'])
-    return get_china_lock_news(time_index)
-
-
-@app.route("/testout/param")
-def get_out(param):
-    print(param)
-
-# @app.route("/news")
-# def get_news():
-#     news = update_news()
-#     return jsonify(news)
-#
-#
-# @app.route("/overall")
-# def get_overall():
-#     overall = update_overall()
-#     return jsonify(overall)
+    return jsonify(get_china_lock_news(time_index))
 
 
 if __name__ == "__main__":
     # print(os.listdir('../data'))
-     app.run(debug=True)
+    print(app.root_path)
+    print(app.instance_path)
+    print(os.path.dirname(app.instance_path))
+    app.run(debug=True)
+

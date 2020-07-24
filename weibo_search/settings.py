@@ -6,7 +6,7 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-
+from datetime import datetime
 BOT_NAME = 'weibo_search'
 
 SPIDER_MODULES = ['weibo_search.spiders']
@@ -14,9 +14,9 @@ NEWSPIDER_MODULE = 'weibo_search.spiders'
 
 LOG_LEVEL = 'ERROR'
 
-# 要搜索的关键词列表，可写多个
+# Keyword list to search
 # KEYWORD_LIST = ['新冠肺炎','新冠','居家隔离', '返工', '复工', '解封']
-KEYWORD_LIST = ['公共卫生响应','新冠肺炎无新增']
+KEYWORD_LIST = ['新冠肺炎无新增']
 # 要搜索的微博类型，0代表搜索全部微博，1代表搜索全部原创微博，2代表热门微博，3代表关注人微博，4代表认证用户微博，5代表媒体微博，6代表观点微博
 WEIBO_TYPE = 5
 # 筛选结果微博中必需包含的内容，0代表不筛选，获取全部微博，1代表搜索包含图片的微博，2代表包含视频的微博，3代表包含音乐的微博，4代表包含短链接的微博
@@ -119,5 +119,7 @@ ITEM_PIPELINES = {
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-
+# Save weibo data into specific data folder each time of search
+CRAWL_ID = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+# url for getting proxy ips
 PROXY_URL = 'http://1120877056079051542.standard.hutoudaili.com/?num=1'

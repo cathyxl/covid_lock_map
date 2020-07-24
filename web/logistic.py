@@ -1,20 +1,20 @@
+"""Define the logistics to get data and construct web page"""
 import json
 import pickle
 import random
 import re
-import time
 import requests
 import os
-
-from flask import jsonify
 from pyecharts.charts import Map, Timeline, Page
 from pyecharts import options as opts
 from datetime import datetime, timedelta
 
 from pyecharts.options import MapItem
 from pypinyin import lazy_pinyin
-from web.server.deal_with_crawled_data import predict_lock_from_text, predict_lock_for_region
+from server.deal_with_crawled_data import predict_lock_from_text, predict_lock_for_region
 
+
+test_path = os.getcwd()
 
 def str_filter(string: str, words: list = ("省", "市", "自治区", "维吾尔", "回族", "壮族")):
     """
@@ -117,6 +117,8 @@ def get_china_lock_map():
     Get all lock condition for china
     :return: {time: {province: close/open}}
     """
+    print(test_path)
+    # date_path =
     lock_map_data = {}
     with open('../data/lock_condition/summary.pk', 'rb') as f:
         china_lock_summary = pickle.load(f)['china']
@@ -162,7 +164,7 @@ def get_china_lock_news(time_index):
         show_blog_f_id = random.sample(china_lock_summary[time_point][prov][1], 1)[0]
         with open('%s/%s/%s.json' % (data_path, prov, show_blog_f_id)) as f:
             china_lock_news.append(json.load(f)['微博正文'])
-    return jsonify(china_lock_news)
+    return china_lock_news
 
 
 def lock_map(map_data):
@@ -198,7 +200,9 @@ def lock_map(map_data):
 
 def predcit_province_lock_from_text(prov_name, time_index=0):
     """
-    Predict province lock from data in realtime
+    Predict city lock for a province from data in realtime pattern,
+    This method is kind of slow, so I just calculate lock down
+    when dealing with initial crawled data.
     :param prov_name:
     :param time_index:
     :return:
@@ -239,6 +243,14 @@ def predcit_province_lock_from_text(prov_name, time_index=0):
 
 
 def predict_china_lock_from_text(start_time='2020-03-15', time_interval=30):
+    """
+        Predict lock from data in realtime pattern,
+        This method is kind of slow, so I just calculate lockdown
+        when dealing with initial crawled data.
+        :param start_time:
+        :param time_interval:
+        :return:
+        """
     mblogs = {}
     mblog_texts = {}
     start_time = datetime.strptime(start_time, '%Y-%m-%d')

@@ -638,6 +638,18 @@ region_dict = {
     # }
 }
 
+
+def find_last_level_region(region):
+    if region in region_dict:
+        return region
+
+    for prov in region_dict:
+        if region in region_dict[prov]['city']:
+            return prov
+    return None
+
+
+
 # import pickle
 # city_prov = {}
 # cities = []
