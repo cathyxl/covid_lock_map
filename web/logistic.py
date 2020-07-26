@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 from pyecharts.options import MapItem
 from pypinyin import lazy_pinyin
-from server.deal_with_crawled_data import predict_lock_from_text, predict_lock_for_region
+from deal_with_crawled_data import predict_lock_from_text, predict_lock_for_region
 
 
 test_path = os.getcwd()
@@ -54,22 +54,6 @@ def city_name_transfer(prov_name, city_name: str):
     print("no", city_name)
     return city_name
 
-# def predict_lock_from_text(text):
-#     # todo: desgin a text prediction algorithm
-#
-#     lock = None
-#     keywords = {1: ['减缓', '无新增','上调至二级','下调至二级'], 2: ['封锁', '居家隔离', '减少聚集', '启动一级', '上调至一级'], 3: ['解封', '复工', '放开通行','下调至三级']}
-#
-#     for ind in keywords:
-#         for kw in keywords[ind]:
-#             if text.find(kw) > 0:
-#                 lock = ind
-#
-#     return lock
-
-
-
-
 
 def prov_lock_map(name, datapair):
     """
@@ -88,12 +72,13 @@ def prov_lock_map(name, datapair):
     # else:
     #     center = None
     #     zoom = 1
-
+    print(datapair)
     prov_map = (
         Map().add(
             "lock down condition",
             data_pair=datapair,
             maptype=name,
+            center=None,
             zoom=1).set_series_opts(label_opts=opts.LabelOpts(is_show=False))
                       .set_global_opts(title_opts=opts.TitleOpts(title="{} lock condition".format(name)),
                                        visualmap_opts=opts.VisualMapOpts(split_number=4, is_piecewise=True,
@@ -112,22 +97,23 @@ def prov_lock_map(name, datapair):
     return page
 
 
-def get_china_lock_map():
+def get_china_lock_map(time_index, time_interval=15):
     """
-    Get all lock condition for china
+    Get lock condition during a time interval for china.
     :return: {time: {province: close/open}}
     """
-    print(test_path)
-    # date_path =
     lock_map_data = {}
     with open('../data/lock_condition/summary.pk', 'rb') as f:
         china_lock_summary = pickle.load(f)['china']
-    for t in china_lock_summary:
+    series = sorted(list(china_lock_summary.keys()))
+    "change the data to show on web page with an interval of 30 days "
+    start_index = max(0, int(time_index-time_interval))
+    end_index = min(len(series), int(time_index+time_interval+1))
+    for t in series[start_index:end_index]:
         lock_map_data[t] = []
         for p in china_lock_summary[t]:
             lock_map_data[t].append(MapItem(name=p, value=china_lock_summary[t][p][0]))
-            # lock_map_data[t] += [p, china_lock_summary[t][p][0]]
-    return lock_map_data
+    return lock_map_data, start_index, time_index-start_index
 
 
 def get_province_lock_map(prov, time_index):
@@ -140,10 +126,10 @@ def get_province_lock_map(prov, time_index):
     lock_map_data = []
     with open('../data/lock_condition/summary.pk', 'rb') as f:
         province_lock_summary = pickle.load(f)['province']
-        time_point = list(province_lock_summary.keys())[time_index]
-
+        time_series = sorted(list(province_lock_summary.keys()))
+        time_point = time_series[time_index]
     for c in province_lock_summary[time_point][prov]:
-        lock_map_data += [[c, province_lock_summary[time_point][prov][c][0]]]
+        lock_map_data += [[city_name_transfer(prov, c), province_lock_summary[time_point][prov][c][0]]]
     return lock_map_data
 
 
@@ -151,20 +137,22 @@ def get_china_lock_news(time_index):
     """
     Get lock evidence for each province at certain time point
     :param time_index:
-    :return: [news1, ...]
+    :return: 'news': related mblog news
+    date: published date for the news
     """
     data_path = '../data/processed_data'
     china_lock_news = []
     with open('../data/lock_condition/summary.pk', 'rb') as f:
         china_lock_summary = pickle.load(f)['china']
-        time_point = list(china_lock_summary.keys())[time_index]
+        time_series = sorted(list(china_lock_summary.keys()))
+        time_point = time_series[time_index]
     for prov in china_lock_summary[time_point]:
         if len(china_lock_summary[time_point][prov][1]) == 0:
             continue
         show_blog_f_id = random.sample(china_lock_summary[time_point][prov][1], 1)[0]
         with open('%s/%s/%s.json' % (data_path, prov, show_blog_f_id)) as f:
             china_lock_news.append(json.load(f)['微博正文'])
-    return china_lock_news
+    return {'news': china_lock_news, 'date': time_point}
 
 
 def lock_map(map_data):
@@ -196,6 +184,10 @@ def lock_map(map_data):
         )
         tl.add(map0, t)
     return tl
+
+"""This two method is used to predict lock down condition in realtime pattern.
+Considering the time delay for computing, this two methods are deprecated. Now 
+the lock down condition is computed before hand, right after crawled from website."""
 
 
 def predcit_province_lock_from_text(prov_name, time_index=0):

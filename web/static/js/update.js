@@ -2,6 +2,7 @@ var chart = echarts.init(document.getElementById('ncov-map'), 'white', {renderer
 // var p_chart = echarts.init(document.getElementById('pmap-chart'), 'white', {renderer: 'canvas'});
 var loader = document.getElementById('loading');
 var time_index = 0;
+var start_index = 0;
 var iframe = document.getElementById('pmap-chart');
 iframe.onreadystatechange=function() {
 		//此事件在内容没有被载入时候也会被触发，所以我们要判断状态
@@ -23,7 +24,7 @@ $(
 
         // setInterval(updateNews, 60 * 1000);
         // setInterval(updateOverall, 60 * 1000);
-        setInterval(fetchData, 30 * 60 * 1000);
+        // setInterval(fetchData, 30 * 60 * 1000);
     }
 );
 chart.on('click', function(params){
@@ -31,7 +32,7 @@ chart.on('click', function(params){
         $.ajax({
             type: "GET",
             url: getHost() + "/pmap",
-            data: {"prov_name": params.name, "time_index":time_index},
+            data: {"prov_name": params.name, "time_index":time_index, "start_index": start_index},
             dataType: "html",
             success: function (result) {
                 var blob = new Blob([result], {'type': 'text/html'});
@@ -47,21 +48,9 @@ chart.on('click', function(params){
 
 chart.on('timelinechanged', function(params) {
     time_index = params.currentIndex;
+    fetchData();
     updateNews();
 
-    // var option = chart.getOption();
-    // window.alert(time_index);
-
-    // window.alert(time_series[time_index])
-    // option.baseOption.timeline.data.keys()
-
-    // window.alert(chart.getOption('baseOption')['timeline']['data'].);
-
-    // window.alert(time_index);
-
-
-    // window.alert(time_index+' '+chart.getOption()['baseOption']['timeline']['data'])
-    // window.alert(params.currentIndex)
 });
 
 function getHost() {
@@ -86,12 +75,15 @@ function updateNews(){
     $.ajax({
         type: "GET",
         url: getHost() + "/news",
-        data: {"time_index":time_index},
+        data: {"time_index":time_index, "start_index": start_index},
         dataType: 'json',
         success: function (result) {
-            news_html = ""
-            for(var i = 0, len = result.length; i < len; i++){
-                news_html += "<li><div class='flex-Introduction'>" + result[i] + "</a></div><small class='text-muted'></small></li>"
+            // window.alert(result['news']);
+            news_html = result['date'];
+            for(var i = 0, len = result['news'].length; i < len; i++){
+
+
+                news_html += "<li><div class='flex-Introduction'>" + result['news'][i] + "</a></div><small class='text-muted'></small></li>"
 
                 // news_html += "<li><div class='base-timeline-info'>" + result[i] + "</a></div><small class='text-muted'></small></li>"
             }
@@ -104,10 +96,13 @@ function fetchData() {
     $.ajax({
         type: "GET",
         url: getHost() + "/map",
+        data: {"time_index":time_index, "start_index": start_index},
         dataType: 'json',
         success: function (result) {
             chart.hideLoading();
-            chart.setOption(result);
+            start_index = result['st_ind'];
+            time_index = result['ind'];
+            chart.setOption(result['lock_map']);
         }
     });
 }

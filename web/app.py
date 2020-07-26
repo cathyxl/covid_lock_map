@@ -2,10 +2,10 @@
 import os
 from flask import Flask, render_template, request, jsonify
 from datetime import timedelta
+import json
 from logistic import predict_china_lock_from_text, lock_map, predcit_province_lock_from_text, prov_lock_map, get_china_lock_news,get_province_lock_map,get_china_lock_map
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
-
 
 @app.route("/")
 def index():
@@ -22,7 +22,7 @@ def gif():
 
 
 def request_parse(req_data):
-    '''解析请求数据并以json形式返回'''
+    '''Parse Request and get data'''
     if req_data.method == 'POST':
         data = req_data.json
     elif req_data.method == 'GET':
@@ -32,33 +32,55 @@ def request_parse(req_data):
 
 @app.route("/map", methods=["GET", "POST"])
 def get_map():
+    """
+    Get the lock map of whole China
+    :return:
+    lock_map: The lock map data to be shown on page
+    st_ind: New start date on timeline
+    ind: New index on timeline for the last clicked time point
+    """
     data = request_parse(request)
-    if 'start_time' in data:
-        start_time = data['start_time']
-    else:
-        start_time = '2020-01-15'
+    start_index = 0
+    if 'start_index' in data:
+        start_index = int(data['start_index'])
+    time_index = int(data['time_index'])
+    abs_time_index = start_index+time_index
+
     print("map start")
     # map_data = predict_china_lock_from_text(start_time=start_time, time_interval=70)
-    map_data = get_china_lock_map()
+    map_data, start_index, time_index = get_china_lock_map(abs_time_index)
     print("get data")
-    return lock_map(map_data).dump_options_with_quotes()
+    str_map_options = lock_map(map_data).dump_options_with_quotes()
+    a_object = json.loads(str_map_options)  # transfer str options into json object
+    return jsonify({'lock_map': a_object, 'st_ind': start_index, 'ind': time_index})
 
 
 @app.route("/pmap", methods=["GET", "POST"])
 def get_pmap():
+    """
+    Get lock down condition for a province on certain date
+    :return:
+    """
     data = request_parse(request)
     prov_name = data['prov_name']
+    "Get absolute time index in all data by adding start_index and the offset(time_index)"
+    start_index = int(data['start_index'])
     time_index = int(data['time_index'])
+    abs_time_index = start_index+time_index
     # prov_map_data = predcit_province_lock_from_text(prov_name, time_index)
-    prov_map_data = get_province_lock_map(prov_name, time_index)
+    prov_map_data = get_province_lock_map(prov_name, abs_time_index)
+
     return prov_lock_map(prov_name, prov_map_data)
 
 
 @app.route("/news", methods=["GET", "POST"])
 def get_china_news():
+    """Get mblog news in china that are related with the lock down condition for each province"""
     data = request_parse(request)
+    start_index = int(data['start_index'])
     time_index = int(data['time_index'])
-    return jsonify(get_china_lock_news(time_index))
+    abs_time_index = start_index + time_index
+    return jsonify(get_china_lock_news(abs_time_index))
 
 
 if __name__ == "__main__":

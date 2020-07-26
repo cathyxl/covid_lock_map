@@ -649,6 +649,22 @@ def find_last_level_region(region):
     return None
 
 
+def get_all_prov_regions():
+    prov_regions = {}
+    for p in region_dict:
+        prov_regions[p] = [p] + [c for c in region_dict[p]['city']]
+    return prov_regions
+
+
+def get_all_regions():
+    regions = []
+    for p in region_dict:
+        regions += [p] + [c for c in region_dict[p]['city']]
+    return regions
+
+regions = get_all_regions()
+
+prov_regions = get_all_prov_regions()
 
 # import pickle
 # city_prov = {}

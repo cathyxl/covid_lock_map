@@ -1692,14 +1692,24 @@ notification widget
 .notification-widget li:hover {
     background: #fafafa;
 }
+.cont {
+                width: 110%;
+                height: 500px;
+                border: 1px hidden #000000;
+                overflow-x: hidden;
+            }
+
+.cont::-webkit-scrollbar {
+                display: none;
+            }
 .flex-Introduction{
-  width:90%;
+  width:95%;
   font-size:12px;
   margin:10px auto 20px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient:vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   text-overflow: ellipsis;
 }
 /*-------------------------------
