@@ -1,4 +1,5 @@
 This project predicts lock down condition of China by refering to the crawled weibo texts.
+![image](https://github.com/xulin66999/covid_lock_map/blob/master/map.png)
 
 Files:
 web：flask projects
