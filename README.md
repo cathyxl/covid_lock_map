@@ -1,6 +1,8 @@
+This project predicts lock down condition of China by refering to the crawled weibo texts.
+
 
 ![image](https://github.com/xulin66999/covid_lock_map/blob/master/map.png)
-This project predicts lock down condition of China by refering to the crawled weibo texts.
+![image](https://github.com/xulin66999/covid_lock_map/blob/master/province_lock.png)
 
 ### Function documentation
 1. The main page shows the lock condtions of each province in China from 2020/2/15-2020/7/20. Red, Yello and Green represents, close, danger and open respectively.
