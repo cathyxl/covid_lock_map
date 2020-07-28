@@ -19,8 +19,8 @@ This project predicts lock down condition of China by refering to the crawled we
 * weibo_search: scrapy based weibo search spider.  <br>
     * account_build, simulate account login <br>
     * spiders
-        *search.py, search weibo  <br>
-        *search_each_day.py, search weibo by specific days interval  <br>
+        * search.py, search weibo  <br>
+        * search_each_day.py, search weibo by a specified day interval  <br>
     * utils, some extra functions deal with weibo data.
     * items.py, weibo data structure
     * middlewares.py,
