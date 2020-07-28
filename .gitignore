@@ -1,2 +1,5 @@
 data/
 venv/
+weibo_search/word_cloud.py
+weibo_search/get_keyword.py
+web/server

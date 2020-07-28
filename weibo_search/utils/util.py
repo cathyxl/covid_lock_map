@@ -7,7 +7,7 @@ def get_all_province():
 
 
 def convert_weibo_type(weibo_type):
-    """将微博类型转换成字符串"""
+    """Change weibo type into url string"""
     if weibo_type == 0:
         return '&typeall=1'
     elif weibo_type == 1:
@@ -26,7 +26,7 @@ def convert_weibo_type(weibo_type):
 
 
 def convert_contain_type(contain_type):
-    """将包含类型转换成字符串"""
+    """Change weibo contained type into url string"""
     if contain_type == 0:
         return '&suball=1'
     elif contain_type == 1:
@@ -40,20 +40,8 @@ def convert_contain_type(contain_type):
     return '&suball=1'
 
 
-def get_regions(region):
-    """根据区域筛选条件返回符合要求的region"""
-    new_region = {}
-    if region:
-        for key in region:
-            if region_dict.get(key):
-                new_region[key] = region_dict[key]
-    if not new_region:
-        new_region = region_dict
-    return new_region
-
-
 def standardize_date(created_at):
-    """标准化微博发布时间"""
+    """Normalize weibo publication time"""
     if "刚刚" in created_at:
         created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
     elif "秒" in created_at:

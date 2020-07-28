@@ -56,7 +56,7 @@ def predict_lock_for_region(lock_list, last_time_lock):
         if lock[1] == pred_lock:
             rel_ids.append(lock[0])
     "Refine lock prediction according to the time series," \
-    "if curretn lock is unk but last lock is not, then continuing the lock condition"
+    "if current lock is unk but last lock is not, then continuing the lock condition"
     if pred_lock == 0:
         if last_time_lock != 0:
             pred_lock = last_time_lock
