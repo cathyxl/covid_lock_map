@@ -1,11 +1,7 @@
 """Define the logistics to get data and construct web page
-region_str_filter, extract_cities
-
-Before 'city_name_transfer',
-get_province_lock_map:
-prov_lock_map:
-get_china_lock_map:
-lock_map:
+   'region_str_filter': remove postfix of regions
+   'extract_cities': extract cities for filtered regions from 'region_str_filter'
+   'city_name_transfer': call 'extract_cities' for standardized city names
 """
 
 import json
@@ -26,7 +22,7 @@ test_path = os.getcwd()
 
 def region_str_filter(string: str, words: list = ("省", "市", "自治区", "维吾尔", "回族", "壮族")):
     """
-    remove postfix of regions
+    Remove postfix of regions
     :param string: target string
     :param words: keywords to remove
     :return:
@@ -38,7 +34,7 @@ def region_str_filter(string: str, words: list = ("省", "市", "自治区", "�
 
 def extract_cities(prov_name):
     """
-    extract relative cities for province
+    Extract relative cities for province
     :param prov_name
     :return:
     """
@@ -52,8 +48,7 @@ def extract_cities(prov_name):
 
 def city_name_transfer(prov_name, city_name: str):
     """
-    Transfer the city name to the standardized one
-    if not,
+    Transfer the city name to the standardized one.
     :param prov_name: province
     :param city_name: target city
     :return:
@@ -68,21 +63,12 @@ def city_name_transfer(prov_name, city_name: str):
 
 def prov_lock_map(name, datapair):
     """
-    Display province lock condition
+    Prepare html page of province lock condition
+    with data acquired by function 'get_province_lock_map'
     :param name:
     :param datapair:
     :return:
     """
-    # if name == "china":
-    #     n = "中国"
-    # else:
-    #     n = name
-    # if name == "海南":
-    #     center = [109.3, 19.10]
-    #     zoom = 6
-    # else:
-    #     center = None
-    #     zoom = 1
     print(datapair)
     prov_map = (
         Map().add(
@@ -149,8 +135,8 @@ def get_china_lock_map(time_index, time_interval=15):
 
 def lock_map(map_data):
     """
-    Construct timelined Map
-    :param map_data:
+    Construct timelined Map with data acquired by function 'get_china_lock_map'
+    :param map_data:{t1:}
     :return: Timeline object
     """
     tl = Timeline()

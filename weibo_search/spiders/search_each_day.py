@@ -13,6 +13,9 @@ from scrapy.exceptions import CloseSpider
 
 
 class SearchDaySpider(scrapy.Spider):
+    """
+    spider starts with start_requests
+    """
     name = 'search_each_day'
     allowed_domains = ['weibo.com']
     settings = get_project_settings()
@@ -24,10 +27,8 @@ class SearchDaySpider(scrapy.Spider):
     start_date = settings.get('START_DATE', datetime.now().strftime('%Y-%m-%d'))
     end_date = settings.get('END_DATE', datetime.now().strftime('%Y-%m-%d'))
 
-
     def start_requests(self):
         """Start Request """
-
         start_date = datetime.strptime(self.start_date, '%Y-%m-%d')
         end_date = datetime.strptime(self.end_date, '%Y-%m-%d') + timedelta(days=1)
         cur_start_date = start_date
@@ -72,8 +73,6 @@ class SearchDaySpider(scrapy.Spider):
                                              })
             cur_start_date += timedelta(days=3)
         print("search end!!!!!")
-
-
 
     def parse(self, response):
         """

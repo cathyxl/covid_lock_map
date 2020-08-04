@@ -69,7 +69,16 @@ def predict_lock_for_region(lock_list, last_time_lock):
 
 def transfer_data_lock(crawled_data_files):
     """
-    * Transfer crawled data to json files and save the predicted lock conditions into files.
+    * Save each crawled weibo text into a json files named by province/date_city_id.json
+    * Save new weibo lock status predicted by 'predict_lock_from_text' together with the
+    old in a certain date and region into json files, path is as province/date_city.json,
+    data item format, [weibo_id, lock_status, score]
+    * Summarize each city lock status by all items in province/date_city.json, which is
+    predicted by 'predict_lock_for_region'
+    * Summarize each province lock status by combine all cities' new lock items
+     and old lock items from province/date_city.json, which is predicted by 'predict_lock_for_region'
+    * Save newly computed province lock status and city lock status into summary.pk
+
     * Since this project did not implement database functions, this kind of saving methods could facilitate the future
     display on the website.
     * This code could deal with newly added crawled data by adding the new into the old saving files without affecting
