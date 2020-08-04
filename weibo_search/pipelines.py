@@ -10,14 +10,14 @@ from scrapy.utils.project import get_project_settings
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
-
+from config import CRAWLED_PATH
 
 class CsvPipeline(object):
     """Save weibo item into csv files"""
     def process_item(self, item, spider):
         settings = get_project_settings()
         crawl_id = settings.get('CRAWL_ID')
-        base_dir = '../data/crawled_files/' + crawl_id + os.sep + item['keyword']
+        base_dir = CRAWLED_PATH + '/' + crawl_id + os.sep + item['keyword']
         if not os.path.isdir(base_dir):
             os.makedirs(base_dir)
         file_path = base_dir + os.sep + item['keyword'] + '.csv'
@@ -43,7 +43,7 @@ class CsvPipeline(object):
 class DuplicatesPipeline(object):
     """Drop duplicate weibo"""
     def process_item(self, item, spider):
-        id_file = '../data/crawled_files/weibo_ids.txt'
+        id_file = '%s/weibo_ids.txt' % CRAWLED_PATH
 
         with open(id_file) as f:
             ids_seen = f.read().splitlines()

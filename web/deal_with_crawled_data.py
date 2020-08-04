@@ -1,13 +1,16 @@
-"""This file implements funtions for:
-predicting lock condition from weibo texts
-predicting lock condition for city/province at one day by computing
-transferring original crawled data to weibo text jsons and lock condition jsons
+"""This file implements functions for:
+* 'predict_lock_from_text': Predicting lock condition from weibo texts
+* 'predict_lock_for_region': Predicting lock condition for city/province at one day by computing
+* 'transfer_data_lock': Transferring original crawled data to weibo text jsons and lock condition jsons,
+  'predict_lock_from_text' and 'predict_lock_for_region' are used for lock prediction in this function
 """
 import csv
 import os
 import pickle
 import json
-from region_info.region import find_last_level_region, region_dict, regions, prov_regions
+import sys
+sys.path.append('.')
+from config import *
 
 
 def predict_lock_from_text(text):
@@ -69,28 +72,25 @@ def transfer_data_lock(crawled_data_files):
     * Transfer crawled data to json files and save the predicted lock conditions into files.
     * Since this project did not implement database functions, this kind of saving methods could facilitate the future
     display on the website.
-    * This code could deal with newly added crawled data by adding the new into the old saving system without affecting
+    * This code could deal with newly added crawled data by adding the new into the old saving files without affecting
     the old files, which could further be implemented as online crawlers.
     :param crawled_data_files:
     :return:
     """
-    data_path = '../data'
-    mblogs = {}
-    processed_data_path = '%s/processed_data/' % data_path
-    lock_condition_path = '%s/lock_condition/' % data_path
-    if not os.path.exists(processed_data_path):
-        os.mkdir(processed_data_path)
-    if not os.path.exists(lock_condition_path):
-        os.mkdir(lock_condition_path)
 
-    if not os.path.exists('%s/processed_data/mblog_ids.json' % data_path):
+    mblogs = {}
+    if not os.path.exists(PROCESSED_JSON_PATH):
+        os.mkdir(PROCESSED_JSON_PATH)
+    if not os.path.exists(LOCK_CONDITION_PATH):
+        os.mkdir(LOCK_CONDITION_PATH)
+
+    if not os.path.exists('%s/mblog_ids.json' % PROCESSED_JSON_PATH):
         mblog_ids = []
     else:
-        with open('%s/processed_data/mblog_ids.json' % data_path) as f:
+        with open('%s/mblog_ids.json' % PROCESSED_JSON_PATH) as f:
             mblog_ids = json.load(f)
 
-    # with open("../../weibo_search/utils/regions.pk", 'rb') as f:
-    #     regions = pickle.load(f)
+    "Read newly crawled csv file and transfer to json files"
     for file_name in crawled_data_files:
         if not os.path.exists(file_name):
             continue
@@ -116,32 +116,32 @@ def transfer_data_lock(crawled_data_files):
                             mblogs[t][p] = {}
                         if r not in mblogs[t][p]:  # city or province
                             mblogs[t][p][r] = []
-                        b_f_id = '%s_%s_%s' % (t, r, b_id)
+                        b_f_id = '%s_%s_%s' % (t, r, b_id)  # weibo json file name consist in date, region and blog id
                         lock, score = predict_lock_from_text(blog['微博正文'])
                         mblogs[t][p][r].append([b_f_id, lock, score])
                         "write blog to file"
-                        if not os.path.exists('%s/processed_data/%s' % (data_path, p)):
-                            os.mkdir('%s/processed_data/%s' % (data_path, p))
-                        if os.path.exists('%s/processed_data/%s/%s.json' % (data_path, p, b_f_id)):
+                        if not os.path.exists('%s/%s' % (PROCESSED_JSON_PATH, p)):
+                            os.mkdir('%s/%s' % (PROCESSED_JSON_PATH, p))
+                        if os.path.exists('%s/%s/%s.json' % (PROCESSED_JSON_PATH, p, b_f_id)):
                             continue
-                        with open('%s/processed_data/%s/%s.json' % (data_path,p, b_f_id), 'w') as f:
+                        with open('%s/%s/%s.json' % (PROCESSED_JSON_PATH,p, b_f_id), 'w') as f:
                             json.dump({'微博正文': blog['微博正文'].replace('\n', ' ')}, f, ensure_ascii=False)
-
-    with open('%s/processed_data/mblog_ids.json' % data_path, 'w') as f:
+    "update all crawled weibo"
+    with open('%s/mblog_ids.json' % PROCESSED_JSON_PATH, 'w') as f:
         json.dump(mblog_ids, f)
         print("write new mblog_ids")
 
-    if not os.path.exists('%s/lock_condition/summary.pk' % data_path):
+    "update newly crawled weibo condition to lock summary"
+    if not os.path.exists('%s/summary.pk' % LOCK_CONDITION_PATH):
         china_lock_map_data = {}
         prov_lock_map_data = {}
     else:
-        with open('%s/lock_condition/summary.pk' % data_path, 'rb') as f:
+        with open('%s/summary.pk' % LOCK_CONDITION_PATH, 'rb') as f:
             a = pickle.load(f)
             china_lock_map_data = a['china']
             prov_lock_map_data = a['province']
 
     time_series = sorted(list(mblogs.keys()))
-
     for i in range(len(time_series)):
         t = time_series[i]
         if t not in china_lock_map_data:
@@ -149,8 +149,8 @@ def transfer_data_lock(crawled_data_files):
         if t not in prov_lock_map_data:
             prov_lock_map_data[t] = {}
         for p in region_dict:
-            if not os.path.exists('%s/lock_condition/%s' % (data_path, p)):
-                os.mkdir('%s/lock_condition/%s' % (data_path, p))
+            if not os.path.exists('%s/%s' % (LOCK_CONDITION_PATH, p)):
+                os.mkdir('%s/%s' % (LOCK_CONDITION_PATH, p))
             if p not in china_lock_map_data[t]:
                 china_lock_map_data[t][p] = None
             if p not in prov_lock_map_data[t]:
@@ -162,10 +162,10 @@ def transfer_data_lock(crawled_data_files):
                     prov_lock_map_data[t][p][r] = None
 
                 "Load the old region lock data, /province/time_region.json"
-                if not os.path.exists('%s/lock_condition/%s/%s_%s.json' % (data_path, p, t, r)):
+                if not os.path.exists('%s/%s/%s_%s.json' % (LOCK_CONDITION_PATH, p, t, r)):
                     old_region_lock = []
                 else:
-                    with open('%s/lock_condition/%s/%s_%s.json' % (data_path, p, t, r)) as f:
+                    with open('%s/%s/%s_%s.json' % (LOCK_CONDITION_PATH, p, t, r)) as f:
                         old_region_lock = json.load(f)
                 "Add old region lock to get old province lock"
                 old_prov_lock += old_region_lock
@@ -173,12 +173,11 @@ def transfer_data_lock(crawled_data_files):
                 new_region_lock = []
                 if p in mblogs[t]:
                     if r in mblogs[t][p]:
-
                         for item in mblogs[t][p][r]:
                             new_region_lock.append(item)
 
                         "Save new region lock by /province/time_region.json"
-                        with open('%s/lock_condition/%s/%s_%s.json' % (data_path, p, t, r), 'w') as f:
+                        with open('%s/%s/%s_%s.json' % (LOCK_CONDITION_PATH, p, t, r), 'w') as f:
                             print('dump new lock %s/%s_%s.json' % (p, t, r))
                             json.dump(old_region_lock + new_region_lock, f)
 
@@ -199,17 +198,15 @@ def transfer_data_lock(crawled_data_files):
                 china_lock_map_data[t][p] = predict_lock_for_region(old_prov_lock + new_prov_lock,
                                                             china_lock_map_data[time_series[i - 1][p]])
     "Save all summary"
-    with open('%s/lock_condition/summary.pk' % data_path, 'wb') as f:
+    with open('%s/summary.pk' % LOCK_CONDITION_PATH, 'wb') as f:
         a = {'china': china_lock_map_data, 'province': prov_lock_map_data}
         pickle.dump(a, f)
         print("write new summary")
 
-
 if __name__ == '__main__':
-    data_path = '../data/crawled_files/original_csv'
+    data_path = CRAWLED_PATH
     keywords = os.listdir(data_path)
     print(keywords)
-    # keywords = ['全面复工']
     crawled_files = []
     # exit()
     for kw in keywords:
@@ -217,8 +214,7 @@ if __name__ == '__main__':
             continue
         print('transfer  %s/%s/%s.csv' % (data_path, kw, kw))
         transfer_data_lock(['%s/%s/%s.csv' % (data_path, kw, kw)])
-        # crawled_files.append('%s/%s/%s.csv' % (data_path, kw, kw))
-    # print(crawled_files)
-    # transfer_data_lock(crawled_files)
+
+
 
 

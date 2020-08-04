@@ -47,6 +47,7 @@ class WeiboLogin:
         )
         cookies = self.browser.get_cookies()
         cookie = [item["name"] + "=" + item["value"] for item in cookies]
+        assert len(cookie) >= 0, 'No Cookie Get'
         cookie_txt = '; '.join(item for item in cookie)
         self.browser.quit()
         return cookie_txt

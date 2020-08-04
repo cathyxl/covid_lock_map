@@ -2,4 +2,10 @@ data/
 venv/
 weibo_search/word_cloud.py
 weibo_search/get_keyword.py
+weibo_search/spiders/search.py
+weibo_search/spiders/weibo_spider.py
 web/server
+practice.py
+.*
+# rule out .gitignore
+!/.gitignore
